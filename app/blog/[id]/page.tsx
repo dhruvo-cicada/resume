@@ -1,7 +1,8 @@
 import { Footer } from "@/components/footer"
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Sparkles, ArrowRight, Calendar, User } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Sparkles, ArrowLeft, Calendar, User, Clock, Share2 } from "lucide-react"
+import { notFound } from "next/navigation"
 import Link from "next/link"
 
 const blogPosts = [
@@ -258,12 +259,37 @@ A cohesive professional brand across platforms makes you more memorable and trus
   },
 ]
 
-export const metadata = {
-  title: "Blog - ResumeAI",
-  description: "Read expert tips and career advice to land your dream job.",
+export async function generateStaticParams() {
+  return blogPosts.map((post) => ({
+    id: post.id.toString(),
+  }))
 }
 
-export default function BlogPage() {
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const post = blogPosts.find((p) => p.id === Number.parseInt(params.id))
+
+  if (!post) {
+    return {
+      title: "Post Not Found - ResumeAI",
+    }
+  }
+
+  return {
+    title: `${post.title} - ResumeAI Blog`,
+    description: post.excerpt,
+  }
+}
+
+export default function BlogPostPage({ params }: { params: { id: string } }) {
+  const post = blogPosts.find((p) => p.id === Number.parseInt(params.id))
+
+  if (!post) {
+    notFound()
+  }
+
+  // Get related posts (same category, excluding current post)
+  const relatedPosts = blogPosts.filter((p) => p.category === post.category && p.id !== post.id).slice(0, 3)
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -275,7 +301,7 @@ export default function BlogPage() {
             <h1 className="text-lg md:text-xl font-bold text-foreground">ResumeAI</h1>
           </Link>
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/builder" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Builder
             </Link>
             <Link href="/blog" className="text-primary transition-colors text-sm font-semibold">
@@ -286,7 +312,7 @@ export default function BlogPage() {
                 Subscribe
               </Button>
             </Link>
-            <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               About
             </Link>
           </nav>
@@ -294,94 +320,116 @@ export default function BlogPage() {
       </header>
 
       <div className="flex-1 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-20 right-0 w-64 h-64 md:w-96 md:h-96 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
 
-        <div className="container mx-auto px-4 py-12 md:py-16 relative z-10">
-          {/* Hero Section */}
-          <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-primary/10 border border-primary/20 rounded-full mb-4 md:mb-6">
-              <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-              <span className="text-xs md:text-sm font-semibold text-primary">Career Insights & Tips</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-3 md:mb-4 leading-tight">
-              Resume & Career Blog
-            </h1>
-            <p className="text-sm md:text-base lg:text-lg text-muted-foreground leading-relaxed px-4">
-              Expert advice, tips, and strategies to help you create a standout resume and advance your career.
-            </p>
-          </div>
+        <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
+          {/* Back Button */}
+          <Link href="/blog">
+            <Button variant="ghost" className="mb-6 md:mb-8 hover:bg-primary/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Blog
+            </Button>
+          </Link>
 
-          {/* Blog Posts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {blogPosts.map((post) => (
-              <Card
-                key={post.id}
-                className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card/80 backdrop-blur-sm flex flex-col"
-              >
-                <div className="p-5 md:p-6 flex flex-col flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs font-semibold px-2.5 md:px-3 py-1 bg-primary/10 text-primary rounded-full">
-                      {post.category}
-                    </span>
-                  </div>
+          {/* Article Header */}
+          <article className="max-w-4xl mx-auto">
+            <div className="mb-6 md:mb-8">
+              <span className="inline-block text-xs font-semibold px-3 py-1 bg-primary/10 text-primary rounded-full mb-4">
+                {post.category}
+              </span>
 
-                  <h2 className="text-lg md:text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                    {post.title}
-                  </h2>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 md:mb-6 leading-tight">
+                {post.title}
+              </h1>
 
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3 flex-1">{post.excerpt}</p>
-
-                  <div className="flex items-center gap-3 md:gap-4 text-xs text-muted-foreground mb-4 pt-4 border-t border-border flex-wrap">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      <span className="text-xs">
-                        {new Date(post.date).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      <span className="text-xs">{post.author}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{post.readTime}</span>
-                    <Link href={`/blog/${post.id}`}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-primary hover:text-primary hover:bg-primary/10 text-xs md:text-sm"
-                      >
-                        Read More
-                        <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4 ml-1 md:ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
+              <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>{post.author}</span>
                 </div>
-              </Card>
-            ))}
-          </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {new Date(post.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{post.readTime}</span>
+                </div>
+              </div>
+            </div>
 
-          {/* CTA Section */}
-          <div className="max-w-2xl mx-auto mt-12 md:mt-16 text-center">
-            <Card className="p-6 md:p-8 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+            {/* Article Content */}
+            <Card className="p-6 md:p-10 bg-card/80 backdrop-blur-sm border-border mb-8 md:mb-12">
+              <div className="prose prose-slate max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground">
+                {post.content.split("\n\n").map((paragraph, index) => (
+                  <p key={index} className="mb-4 leading-relaxed whitespace-pre-line">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+
+              {/* Share Section */}
+              <div className="mt-8 pt-6 border-t border-border">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <p className="text-sm font-semibold text-foreground">Found this helpful? Share it:</p>
+                  <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Share2 className="w-4 h-4" />
+                    Share Article
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Related Posts */}
+            {relatedPosts.length > 0 && (
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Related Articles</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {relatedPosts.map((relatedPost) => (
+                    <Card
+                      key={relatedPost.id}
+                      className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card/80 backdrop-blur-sm"
+                    >
+                      <div className="p-5">
+                        <span className="inline-block text-xs font-semibold px-2.5 py-1 bg-primary/10 text-primary rounded-full mb-3">
+                          {relatedPost.category}
+                        </span>
+                        <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                          {relatedPost.title}
+                        </h3>
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{relatedPost.excerpt}</p>
+                        <Link href={`/blog/${relatedPost.id}`}>
+                          <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 p-0">
+                            Read More
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA Section */}
+            <Card className="mt-12 p-6 md:p-8 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20 text-center">
               <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">Ready to Build Your Resume?</h3>
-              <p className="text-sm md:text-base text-muted-foreground mb-6">
+              <p className="text-sm md:text-base text-muted-foreground mb-6 max-w-2xl mx-auto">
                 Apply these insights to create a professional, ATS-friendly resume with our AI-powered builder.
               </p>
               <Link href="/builder">
-                <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   Start Building Now
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <Sparkles className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </Card>
-          </div>
+          </article>
         </div>
       </div>
 
