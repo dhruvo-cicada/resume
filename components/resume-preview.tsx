@@ -3,103 +3,74 @@
 import type { GeneratedResume } from "@/app/builder/page"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { useRef, useState, useCallback, memo } from "react"
-import { Download, Edit2, Copy, Check, ExternalLink, Mail, Phone, MapPin, Linkedin } from "lucide-react"
+import { useState, useCallback } from "react"
+import { Download, Edit, Mail, Phone, MapPin, Linkedin, FolderGit2 } from "lucide-react"
 
 interface ResumePreviewProps {
   data: GeneratedResume
   onEdit: () => void
-  allowEdit?: boolean
+  isDemo?: boolean
 }
 
-export const ResumePreview = memo(function ResumePreview({ data, onEdit, allowEdit = true }: ResumePreviewProps) {
-  const resumeRef = useRef<HTMLDivElement>(null)
-  const [copied, setCopied] = useState(false)
+export function ResumePreview({ data, onEdit, isDemo = false }: ResumePreviewProps) {
   const [isDownloading, setIsDownloading] = useState(false)
+  const [docxError, setDocxError] = useState<string | null>(null)
 
-  const downloadPDF = useCallback(async () => {
+  const downloadDocument = useCallback(async () => {
     setIsDownloading(true)
+    setDocxError(null)
     try {
-      const html2pdf = (await import("html2pdf.js")).default
-
-      // Create a clean version for PDF without buttons
-      const pdfContent = document.createElement("div")
-      pdfContent.innerHTML = resumeRef.current?.innerHTML || ""
-
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `${data.header.name.replace(/\s+/g, "_")}_Resume.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
+      const response = await fetch("/api/generate-docx", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-          compress: true,
-        },
+        body: JSON.stringify({ resumeData: data }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate document")
       }
 
-      await html2pdf().set(opt).from(resumeRef.current).save()
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${data.header.name.replace(/\s+/g, "_")}_Resume.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
     } catch (error) {
-      console.error("Failed to generate PDF:", error)
-      alert("Failed to download PDF. Please try again.")
+      console.error("Failed to generate document:", error)
+      setDocxError(`Failed to download document: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setIsDownloading(false)
     }
-  }, [data.header.name])
-
-  const copyToClipboard = useCallback(() => {
-    const text = JSON.stringify(data, null, 2)
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }, [data])
 
   return (
     <div className="space-y-6">
       <div className="flex gap-4 justify-center flex-wrap animate-fade-in">
-        <Button
-          onClick={downloadPDF}
-          disabled={isDownloading}
-          className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 transition-all duration-200 hover:shadow-lg"
-        >
-          <Download className="w-4 h-4" />
-          {isDownloading ? "Generating..." : "Download PDF"}
+        <Button onClick={downloadDocument} disabled={isDownloading} size="lg" className="gap-2">
+          <Download className="h-4 w-4" />
+          {isDownloading ? "Generating..." : "Download Word Doc"}
         </Button>
-        <Button
-          onClick={copyToClipboard}
-          variant="outline"
-          className="px-6 gap-2 border-border hover:bg-card bg-transparent transition-all duration-200 hover:shadow-lg"
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              Copy JSON
-            </>
-          )}
-        </Button>
-        {allowEdit && (
-          <Button
-            onClick={onEdit}
-            variant="outline"
-            className="px-6 gap-2 border-border hover:bg-card bg-transparent transition-all duration-200 hover:shadow-lg"
-          >
-            <Edit2 className="w-4 h-4" />
+        {!isDemo && (
+          <Button onClick={onEdit} variant="outline" size="lg" className="gap-2 bg-transparent">
+            <Edit className="h-4 w-4" />
             Edit Resume
           </Button>
         )}
       </div>
 
-      <Card className="p-8 md:p-12 bg-card text-foreground shadow-2xl border-border animate-fade-in" ref={resumeRef}>
+      {docxError && (
+        <Card className="p-4 bg-destructive/10 border-destructive">
+          <p className="text-sm text-destructive">{docxError}</p>
+        </Card>
+      )}
+
+      <Card className="p-8 md:p-12 bg-card text-foreground shadow-2xl border-border animate-fade-in">
         {/* Header Section */}
         <div className="mb-8 pb-6 border-b-2 border-primary">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{data.header.name}</h1>
@@ -314,7 +285,7 @@ export const ResumePreview = memo(function ResumePreview({ data, onEdit, allowEd
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary/80 transition-colors duration-200 flex items-center gap-1 text-sm font-medium whitespace-nowrap"
                       >
-                        View <ExternalLink className="w-3.5 h-3.5" />
+                        View <FolderGit2 className="w-3.5 h-3.5" />
                       </a>
                     )}
                   </div>
@@ -339,4 +310,4 @@ export const ResumePreview = memo(function ResumePreview({ data, onEdit, allowEd
       </Card>
     </div>
   )
-})
+}
