@@ -73,35 +73,48 @@ export function ResumePreview({ data, onEdit, isDemo = false }: ResumePreviewPro
       <Card className="p-8 md:p-12 bg-card text-foreground shadow-2xl border-border animate-fade-in">
         {/* Header Section */}
         <div className="mb-8 pb-6 border-b-2 border-primary">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{data.header.name}</h1>
-          <p className="text-lg md:text-xl font-semibold text-primary mb-4">{data.header.title}</p>
+          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center mb-4">
+            {data.header.profilePicture && (
+              <div className="flex-shrink-0">
+                <img
+                  src={data.header.profilePicture || "/placeholder.svg"}
+                  alt={data.header.name}
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-primary/30"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{data.header.name}</h1>
+              <p className="text-lg md:text-xl font-semibold text-primary mb-4">{data.header.title}</p>
 
-          {/* Contact Information with Icons */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            {data.header.contact.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <span>{data.header.contact.email}</span>
+              {/* Contact Information with Icons */}
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                {data.header.contact.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    <span>{data.header.contact.email}</span>
+                  </div>
+                )}
+                {data.header.contact.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    <span>{data.header.contact.phone}</span>
+                  </div>
+                )}
+                {data.header.contact.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>{data.header.contact.location}</span>
+                  </div>
+                )}
+                {data.header.contact.linkedin && (
+                  <div className="flex items-center gap-2">
+                    <Linkedin className="w-4 h-4" />
+                    <span>{data.header.contact.linkedin}</span>
+                  </div>
+                )}
               </div>
-            )}
-            {data.header.contact.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                <span>{data.header.contact.phone}</span>
-              </div>
-            )}
-            {data.header.contact.location && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>{data.header.contact.location}</span>
-              </div>
-            )}
-            {data.header.contact.linkedin && (
-              <div className="flex items-center gap-2">
-                <Linkedin className="w-4 h-4" />
-                <span>{data.header.contact.linkedin}</span>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 

@@ -23,6 +23,7 @@ export interface ResumeData {
   summary_or_bio: string
   target_job: string
   industry: string
+  profilePicture?: string
   education: Array<{
     institution: string
     degree: string
@@ -57,6 +58,7 @@ export interface GeneratedResume {
   header: {
     name: string
     title: string
+    profilePicture?: string
     contact: {
       email: string
       phone: string
@@ -99,6 +101,7 @@ const demoResume: GeneratedResume = {
   header: {
     name: "Sarah Johnson",
     title: "Senior Software Engineer",
+    profilePicture: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA...",
     contact: {
       email: "sarah.johnson@email.com",
       phone: "+1 (555) 123-4567",

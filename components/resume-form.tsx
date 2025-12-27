@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { AlertCircle, Loader2, Plus, Trash2 } from "lucide-react"
+import { Loader2, Plus, Trash2, Upload } from "lucide-react"
 import { useState, useCallback, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,10 +11,10 @@ import type { ResumeData } from "@/app/page"
 
 interface ResumeFormProps {
   onSubmit: (data: ResumeData) => void
-  isLoading: boolean
+  isLoading?: boolean
 }
 
-export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading }: ResumeFormProps) {
+export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading = false }: ResumeFormProps) {
   const [formData, setFormData] = useState<ResumeData>({
     name: "",
     email: "",
@@ -29,6 +29,7 @@ export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading }: Resu
     skills: [],
     projects: [],
     language: "English",
+    profilePicture: "",
   })
 
   const [educationInput, setEducationInput] = useState({ institution: "", degree: "", field: "", year: "", gpa: "" })
@@ -49,6 +50,7 @@ export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading }: Resu
     link: "",
     impact: "",
   })
+  const [profilePicture, setProfilePicture] = useState<string>("")
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -57,6 +59,17 @@ export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading }: Resu
     },
     [],
   )
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfilePicture(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const addEducation = useCallback(() => {
     if (educationInput.institution && educationInput.degree) {
@@ -135,7 +148,7 @@ export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading }: Resu
   }, [])
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault()
       if (!formData.name || !formData.target_job) {
         alert("Please fill in all required fields: Name and Target Job")
@@ -148,12 +161,39 @@ export const ResumeForm = memo(function ResumeForm({ onSubmit, isLoading }: Resu
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex gap-3 animate-fade-in">
-        <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-foreground">
-          Tip: The more detailed information you provide, the better our AI can optimize your resume for your target
-          role.
-        </p>
+      {/* Profile Picture Upload Section */}
+      <div className="space-y-2">
+        <label htmlFor="profilePicture" className="block text-sm font-semibold text-foreground">
+          Profile Picture <span className="text-muted-foreground text-xs">(Optional)</span>
+        </label>
+        <div className="flex items-center gap-4">
+          {profilePicture && (
+            <div className="relative">
+              <img
+                src={profilePicture || "/placeholder.svg"}
+                alt="Profile"
+                className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setProfilePicture("")}
+                className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-destructive/90"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          <div className="flex-1">
+            <label
+              htmlFor="profilePicture"
+              className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:bg-card/50 transition-colors"
+            >
+              <Upload className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{profilePicture ? "Change photo" : "Upload photo"}</span>
+            </label>
+            <input id="profilePicture" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          </div>
+        </div>
       </div>
 
       {/* Personal Information */}

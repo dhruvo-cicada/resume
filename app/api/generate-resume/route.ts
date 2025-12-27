@@ -270,6 +270,7 @@ const generateResumeFromUserData = (formData: any) => {
     header: {
       name: formData.name || "Professional",
       title: formData.target_job || formData.current_title || "Professional",
+      profilePicture: formData.profilePicture || undefined,
       contact: {
         email:
           formData.email || `${formData.name?.toLowerCase().replace(/\s+/g, ".")}@email.com` || "contact@email.com",
