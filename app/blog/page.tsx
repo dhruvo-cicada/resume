@@ -374,7 +374,7 @@ export default function BlogPage() {
               <p className="text-sm md:text-base text-muted-foreground mb-6">
                 Apply these insights to create a professional, ATS-friendly resume with our AI-powered builder.
               </p>
-              <Link href="/builder">
+              <Link href="/create-resume">
                 <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
                   Start Building Now
                   <ArrowRight className="w-4 h-4 ml-2" />

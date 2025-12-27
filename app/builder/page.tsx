@@ -16,14 +16,40 @@ const Footer = dynamic(() => import("@/components/footer").then((mod) => ({ defa
 
 export interface ResumeData {
   name: string
+  email?: string
+  phone?: string
+  location?: string
   current_title: string
   summary_or_bio: string
-  education: string
-  work_experience: string
-  skills: string
-  projects: string
   target_job: string
   industry: string
+  education: Array<{
+    institution: string
+    degree: string
+    field?: string
+    year: string
+    gpa?: string
+  }>
+  work_experience: Array<{
+    company: string
+    title: string
+    location?: string
+    startDate: string
+    endDate: string
+    description: string
+    achievements: string
+  }>
+  skills: Array<{
+    name: string
+    category: string
+  }>
+  projects: Array<{
+    name: string
+    description: string
+    technologies: string
+    link?: string
+    impact: string
+  }>
   language: string
 }
 
@@ -145,8 +171,8 @@ const demoResume: GeneratedResume = {
 }
 
 export default function BuilderPage() {
-  const [step, setStep] = useState<"form" | "preview">("preview")
-  const [resumeData, setResumeData] = useState<GeneratedResume | null>(demoResume)
+  const [step, setStep] = useState<"form" | "preview">("form")
+  const [resumeData, setResumeData] = useState<GeneratedResume | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isUserGenerated, setIsUserGenerated] = useState(false)

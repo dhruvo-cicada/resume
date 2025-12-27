@@ -173,10 +173,9 @@ const generateAchievements = (workExperience: string, targetJob: string): string
 }
 
 const generateResumeFromUserData = (formData: any) => {
-  // Parse work experience into structured format
-  const parseWorkExperience = (experienceText: string) => {
-    if (!experienceText) {
-      // Generate sample experience based on target job
+  // Parse work experience from structured array
+  const parseWorkExperience = (experienceArray: any[]) => {
+    if (!experienceArray || experienceArray.length === 0) {
       return [
         {
           company: "Professional Experience",
@@ -189,125 +188,54 @@ const generateResumeFromUserData = (formData: any) => {
       ]
     }
 
-    const lines = experienceText.split("\n").filter((line) => line.trim())
-    const experiences = []
+    return experienceArray.map((exp) => {
+      const achievements = exp.achievements
+        ? exp.achievements
+            .split("\n")
+            .map((a: string) => a.trim())
+            .filter((a: string) => a)
+        : [exp.description]
 
-    // Enhanced parsing - look for company names, dates, etc.
-    let currentExperience: any = null
-    const bullets: string[] = []
-
-    for (const line of lines) {
-      const trimmedLine = line.trim()
-
-      // Check if line looks like a company/title (longer, no bullet points)
-      if (trimmedLine.length > 0 && !trimmedLine.startsWith("-") && !trimmedLine.startsWith("•")) {
-        // Save previous experience if exists
-        if (currentExperience && bullets.length > 0) {
-          currentExperience.bullets = [...bullets]
-          experiences.push(currentExperience)
-          bullets.length = 0
-        }
-
-        // Start new experience
-        currentExperience = {
-          company: trimmedLine.split(",")[0]?.trim() || trimmedLine,
-          title: formData.current_title || formData.target_job || "Professional",
-          start: "2020",
-          end: "Present",
-          location: "United States",
-          bullets: [],
-        }
-      } else if (trimmedLine.length > 0) {
-        // This is a bullet point
-        bullets.push(trimmedLine.replace(/^[-•]\s*/, ""))
-      }
-    }
-
-    // Add last experience
-    if (currentExperience) {
-      currentExperience.bullets =
-        bullets.length > 0 ? bullets : generateAchievements(experienceText, formData.target_job || "")
-      experiences.push(currentExperience)
-    }
-
-    // If no structured experiences found, create one
-    if (experiences.length === 0 && lines.length > 0) {
-      experiences.push({
-        company: lines[0] || "Professional Experience",
-        title: formData.current_title || formData.target_job || "Professional",
-        start: "2020",
-        end: "Present",
-        location: "United States",
-        bullets: generateAchievements(experienceText, formData.target_job || ""),
-      })
-    }
-
-    return experiences
-  }
-
-  // Parse education into structured format
-  const parseEducation = (educationText: string) => {
-    if (!educationText) return []
-
-    const lines = educationText.split("\n").filter((line) => line.trim())
-
-    return lines.slice(0, 3).map((line) => {
-      // Try to extract institution, degree, and year
-      const parts = line.split(",").map((p) => p.trim())
       return {
-        institution: parts[0] || "University",
-        degree: parts[1] || "Bachelor's Degree",
-        year: parts[2] || "2020",
+        company: exp.company || "Company",
+        title: exp.title || "Position",
+        start: exp.startDate || "2020",
+        end: exp.endDate || "Present",
+        location: exp.location || "United States",
+        bullets:
+          achievements.length > 0 ? achievements : generateAchievements(exp.description, formData.target_job || ""),
       }
     })
   }
 
-  // Parse skills into categories
-  const parseSkills = (skillsText: string) => {
-    if (!skillsText) return { technical: [], soft: [], tools: [] }
+  // Parse education from structured array
+  const parseEducation = (educationArray: any[]) => {
+    if (!educationArray || educationArray.length === 0) return []
 
-    const skillsList = skillsText
-      .split(/[,\n]/)
-      .map((s) => s.trim())
-      .filter((s) => s)
+    return educationArray.map((edu) => ({
+      institution: edu.institution || "University",
+      degree: edu.degree || "Degree",
+      year: edu.year || "2020",
+    }))
+  }
 
-    // Enhanced categorization logic
+  // Parse skills from structured array
+  const parseSkills = (skillsArray: any[]) => {
+    if (!skillsArray || skillsArray.length === 0) {
+      return { technical: [], soft: [], tools: [] }
+    }
+
     const technical: string[] = []
     const soft: string[] = []
     const tools: string[] = []
 
-    const softSkillKeywords = [
-      "communication",
-      "leadership",
-      "management",
-      "collaboration",
-      "problem",
-      "teamwork",
-      "critical thinking",
-      "adaptability",
-      "time management",
-    ]
-    const toolKeywords = [
-      "office",
-      "excel",
-      "powerpoint",
-      "jira",
-      "slack",
-      "figma",
-      "photoshop",
-      "salesforce",
-      "hubspot",
-      "tableau",
-    ]
-
-    skillsList.forEach((skill) => {
-      const lowerSkill = skill.toLowerCase()
-      if (softSkillKeywords.some((keyword) => lowerSkill.includes(keyword))) {
-        soft.push(skill)
-      } else if (toolKeywords.some((keyword) => lowerSkill.includes(keyword))) {
-        tools.push(skill)
+    skillsArray.forEach((skill) => {
+      if (skill.category === "Soft Skills") {
+        soft.push(skill.name)
+      } else if (skill.category === "Tools & Platforms" || skill.category === "Languages") {
+        tools.push(skill.name)
       } else {
-        technical.push(skill)
+        technical.push(skill.name)
       }
     })
 
@@ -316,26 +244,23 @@ const generateResumeFromUserData = (formData: any) => {
       soft.push("Communication", "Problem Solving", "Team Collaboration")
     }
 
-    return { technical: technical.slice(0, 10), soft: soft.slice(0, 5), tools: tools.slice(0, 5) }
+    return { technical, soft, tools }
   }
 
-  // Parse projects
-  const parseProjects = (projectsText: string) => {
-    if (!projectsText) return []
+  // Parse projects from structured array
+  const parseProjects = (projectsArray: any[]) => {
+    if (!projectsArray || projectsArray.length === 0) return []
 
-    const lines = projectsText.split("\n").filter((line) => line.trim())
-    const skills = formData.skills
-      ? formData.skills
-          .split(/[,\n]/)
-          .map((s: string) => s.trim())
-          .filter((s: string) => s)
-      : []
-
-    return lines.slice(0, 3).map((line) => ({
-      name: line.split(":")[0]?.trim() || line.substring(0, 50),
-      description: line.split(":")[1]?.trim() || line,
-      tech_stack: skills.slice(0, 4),
-      link: "",
+    return projectsArray.map((project) => ({
+      name: project.name || "Project",
+      description: project.description || "",
+      tech_stack: project.technologies
+        ? project.technologies
+            .split(",")
+            .map((t: string) => t.trim())
+            .filter((t: string) => t)
+        : [],
+      link: project.link || "",
     }))
   }
 
@@ -346,9 +271,10 @@ const generateResumeFromUserData = (formData: any) => {
       name: formData.name || "Professional",
       title: formData.target_job || formData.current_title || "Professional",
       contact: {
-        email: formData.name ? `${formData.name.toLowerCase().replace(/\s+/g, ".")}@email.com` : "contact@email.com",
-        phone: "+1 (555) 123-4567",
-        location: formData.industry ? `${formData.industry} Professional` : "United States",
+        email:
+          formData.email || `${formData.name?.toLowerCase().replace(/\s+/g, ".")}@email.com` || "contact@email.com",
+        phone: formData.phone || "+1 (555) 123-4567",
+        location: formData.location || formData.industry || "United States",
         linkedin: `linkedin.com/in/${formData.name ? formData.name.toLowerCase().replace(/\s+/g, "") : "profile"}`,
       },
     },
